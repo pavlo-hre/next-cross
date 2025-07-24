@@ -82,14 +82,14 @@ export default function Home() {
     return (
         <div className="min-h-screen flex items-center pt-8 flex-col bg-gray-100">
             <h1 className={"text-2xl mb-4"}>WASH crosscheck</h1>
-            <div className="text-center mb-2 px-10">
+            <div className="text-center mb-2 px-10 ">
                 Введіть прізвище або ІПН бенефіціара для пошуку в базах Norway та EA
             </div>
             <div className="relative">
                 <input  value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
                         placeholder="мінімум 3 літери для пошуку"
-                        className="w-[320px] text-1xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
-                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-0 top-0 bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+                        className="w-[320px] text-xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
+                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-0 top-0.5 bottom-0 py-1.5 px-3 bg-red-300">X</span>}
             </div>
 
             {value ? <div className="py-8 w-full">
@@ -105,7 +105,7 @@ export default function Home() {
                 }
             </div> : ""}
             {value && value.length > 2 && res.length === 0 && !loading &&
-                <div className="flex flex-col justify-center items-center">
+                <div className="flex flex-col justify-center items-center text-xl">
                     <Image width={50} src={done} alt={"Ok"} className="mb-2"/>
                     Бенефіціара не знайдено
                 </div>}
