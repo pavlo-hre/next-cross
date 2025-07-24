@@ -84,8 +84,8 @@ export default function Home() {
             </div>
             <div className="relative">
                 <input  value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                        placeholder=" мінімум 3 літери для пошуку"
-                        className="w-[320px] p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
+                        placeholder="мінімум 3 літери для пошуку"
+                        className="w-[320px] text-1xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
                 {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-0 top-0 bottom-0 py-1.5 px-3 bg-red-300">X</span>}
             </div>
 
