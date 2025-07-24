@@ -65,7 +65,11 @@ export default function Home() {
             setRes([]);
             setLoading(false);
         }
-    }, 500)
+    }, 500);
+
+    const onClear = () => {
+        setValue("");
+    }
 
     useEffect(() => {
         setLoading(true);
@@ -78,9 +82,13 @@ export default function Home() {
             <div className="text-center mb-2 px-10">
                 Введіть прізвище або ІПН бенефіціара для пошуку в базах Norway та EA
             </div>
-            <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                   placeholder=" мінімум 3 літери для пошуку"
-                   className="w-[300px] p-1 border-2 rounded-m border-gray-300 mb-1 " onKeyDown={onEnterPres}/>
+            <div className="relative">
+                <input  value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
+                        placeholder=" мінімум 3 літери для пошуку"
+                        className="w-[320px] p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
+                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-0 top-0 bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+            </div>
+
             {value ? <div className="py-8 w-full">
                 {
                     res.map((el, index: number) => (
