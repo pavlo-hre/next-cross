@@ -1,5 +1,5 @@
 "use client"
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import {useDebouncedCallback} from 'use-debounce';
 import Image from "next/image";
@@ -7,6 +7,7 @@ import done from "../assets/tick-green-icon.svg"
 
 export default function Home() {
     const [value, setValue] = useState<string>("");
+    const ref = useRef<any>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [norwayDataKind, setNorwayDataKind] = useState<any[]>([]);
     const [eaDataKind, setEaDataKind] = useState<any[]>([]);
@@ -35,6 +36,7 @@ export default function Home() {
             setEaDataKind(res.data.values.filter((el: any) => !!el.length));
             setLoading(false);
         });
+        ref.current?.focus();
     }, [])
 
 
@@ -69,6 +71,7 @@ export default function Home() {
 
     const onClear = () => {
         setValue("");
+        ref.current?.focus();
     }
 
     useEffect(() => {
