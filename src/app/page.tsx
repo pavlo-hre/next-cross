@@ -16,10 +16,12 @@ export default function Home() {
     }
 
     useEffect(() => {
-        axios.get("https://sheets.googleapis.com/v4/spreadsheets/1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw/values/norway-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM").then((res) => {
+        const mainUrl = "https://sheets.googleapis.com/v4/spreadsheets";
+        const tableId = "1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw";
+        axios.get(`${mainUrl}/${tableId}/values/norway-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setNorwayData(res.data.values)
         });
-        axios.get("https://sheets.googleapis.com/v4/spreadsheets/1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw/values/norway-cash!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM").then((res) => {
+        axios.get(`${mainUrl}/${tableId}/values/norway-cash!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setNorwayDataCash(res.data.values.filter((el: any) => !!el.length))
         });
     }, [])
