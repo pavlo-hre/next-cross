@@ -3,12 +3,14 @@ import {useEffect, useRef, useState} from "react";
 import axios from "axios";
 import {useDebouncedCallback} from 'use-debounce';
 import Image from "next/image";
-import done from "../assets/tick-green-icon.svg"
+import done from "../assets/tick-green-icon.svg";
+import loader from "../assets/tube-spinner.svg"
 
 export default function Home() {
     const [value, setValue] = useState<string>("");
     const ref = useRef<any>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [fetching, setFetching] = useState<boolean>(false);
     const [norwayDataKind, setNorwayDataKind] = useState<any[]>([]);
     const [eaDataKind, setEaDataKind] = useState<any[]>([]);
     const [norwayDataCash, setNorwayDataCash] = useState<any[]>([]);
@@ -20,24 +22,26 @@ export default function Home() {
         }
     }
 
-    useEffect(() => {
-        setLoading(true);
+
+    const fetchData = () => {
+        setFetching(true);
         const mainUrl = "https://sheets.googleapis.com/v4/spreadsheets";
         const tableId = "1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw";
-        axios.get(`${mainUrl}/${tableId}/values/norway-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
+        const promise1 = axios.get(`${mainUrl}/${tableId}/values/norway-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setNorwayDataKind(res.data.values);
-            setLoading(false);
         });
-        axios.get(`${mainUrl}/${tableId}/values/norway-cash!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
+        const promise2 = axios.get(`${mainUrl}/${tableId}/values/norway-cash!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setNorwayDataCash(res.data.values.filter((el: any) => !!el.length));
-            setLoading(false);
         });
-        axios.get(`${mainUrl}/${tableId}/values/ea-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
+        const promise3 = axios.get(`${mainUrl}/${tableId}/values/ea-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setEaDataKind(res.data.values.filter((el: any) => !!el.length));
-            setLoading(false);
         });
-        ref.current?.focus();
-    }, [])
+        Promise.allSettled([promise1, promise2, promise3]).then(() => {
+            setFetching(false);
+        });
+    }
+
+    useEffect(fetchData, [])
 
 
     const onCheck = useDebouncedCallback(() => {
@@ -79,16 +83,20 @@ export default function Home() {
         onCheck();
     }, [value]);
 
-    return (
+    return fetching ? (<div className="w-full h-[100vh] flex justify-center items-center">
+        <Image src={loader} alt={"loading"} className="my-5"/>
+    </div>) : (
         <div className="min-h-screen flex items-center pt-8 flex-col bg-gray-100">
             <div className="text-center mb-4 px-10 text-xl max-w-[500px]">
                 Перевірка реєстрації в базах Norway та EA
             </div>
             <div className="relative max-w-[500px] w-[95%]">
-                <input  value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                        placeholder="Введіть Прізвище або ІПН"
-                        className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
-                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+                <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
+                       placeholder="Введіть Прізвище або ІПН"
+                       className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"
+                       onKeyDown={onEnterPres}/>
+                {!!value.trim() && <span onClick={onClear}
+                                         className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
             </div>
 
             {value ? <div className="w-full max-w-[500px]">
