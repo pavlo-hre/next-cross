@@ -81,14 +81,14 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex items-center pt-8 flex-col bg-gray-100">
-            <div className="text-center mb-2 px-10 text-xl max-w-[500px]">
-                Введіть прізвище або ІПН бенефіціара для перевірки реєстрації в базах <br/>Norway та EA
+            <div className="text-center mb-4 px-10 text-xl max-w-[500px]">
+                Перевірка реєстрації в базах Norway та EA
             </div>
             <div className="relative max-w-[500px] w-[95%]">
                 <input  value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                        placeholder="мінімум 3 літери для пошуку"
-                        className="w-full text-xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
-                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-0 top-0.5 bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+                        placeholder="Введіть Прізвище або ІПН"
+                        className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4" onKeyDown={onEnterPres}/>
+                {!!value.trim() &&  <span onClick={onClear} className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
             </div>
 
             {value ? <div className="w-full max-w-[500px]">
