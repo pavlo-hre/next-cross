@@ -88,11 +88,11 @@ export default function Home() {
     </div>) : (
         <div className="min-h-screen flex items-center pt-8 flex-col bg-gray-100">
             <div className="text-center mb-4 px-10 text-xl max-w-[500px]">
-                Перевірка реєстрації в базах Norway та EA
+                Перевірка реєстрації в базах Norway, EA, BHA
             </div>
             <div className="relative max-w-[500px] w-[95%]">
                 <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                       placeholder="Введіть Прізвище або ІПН"
+                       placeholder="Прізвище або ІПН"
                        className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"
                        onKeyDown={onEnterPres}/>
                 {!!value.trim() && <span onClick={onClear}
