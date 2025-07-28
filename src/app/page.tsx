@@ -14,7 +14,8 @@ export default function Home() {
     const [norwayDataKind, setNorwayDataKind] = useState<any[]>([]);
     const [eaDataKind, setEaDataKind] = useState<any[]>([]);
     const [norwayDataCash, setNorwayDataCash] = useState<any[]>([]);
-    const [res, setRes] = useState<{ name: string; date: string; type: string; taxNumber: string }[]>([])
+    const [res, setRes] = useState<{ name: string; date: string; type: string; taxNumber: string }[]>([]);
+    const [records, setRecords] = useState<number>(0)
 
     const onEnterPres = (e: any) => {
         if (e.code === "Enter") {
@@ -25,19 +26,30 @@ export default function Home() {
 
     const fetchData = () => {
         setFetching(true);
+        let records = 0;
         const mainUrl = "https://sheets.googleapis.com/v4/spreadsheets";
         const tableId = "1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw";
         const promise1 = axios.get(`${mainUrl}/${tableId}/values/norway-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
-            setNorwayDataKind(res.data.values);
+            const res1 = res.data.values.filter((el: any) => !!el.length);
+            setNorwayDataKind(res1);
+            records += res1.length;
         });
         const promise2 = axios.get(`${mainUrl}/${tableId}/values/norway-cash!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
-            setNorwayDataCash(res.data.values.filter((el: any) => !!el.length));
+            const res2 = res.data.values.filter((el: any) => !!el.length);
+            setNorwayDataCash(res2);
+            records += res2.length;
         });
         const promise3 = axios.get(`${mainUrl}/${tableId}/values/ea-kind!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
-            setEaDataKind(res.data.values.filter((el: any) => !!el.length));
+            const res3 = res.data.values.filter((el: any) => !!el.length);
+            setEaDataKind(res3);
+            records += res3.length;
         });
         Promise.allSettled([promise1, promise2, promise3]).then(() => {
             setFetching(false);
+            setRecords(records);
+            if(records < 2400){
+                alert("Помилка імпорту Google Sheets. Будь ласка перезавантажте сторінку")
+            }
         });
     }
 
@@ -86,8 +98,11 @@ export default function Home() {
     return fetching ? (<div className="w-full h-[100vh] flex justify-center items-center">
         <Image src={loader} alt={"loading"} className="my-5"/>
     </div>) : (
-        <div className="min-h-screen flex items-center pt-8 flex-col bg-gray-100">
-            <div className="text-center mb-4 px-10 text-xl max-w-[500px]">
+        <div className="min-h-screen flex items-center  flex-col bg-gray-100">
+            <div className="text-sm">
+                Завантажено бенефіціарів: {records}
+            </div>
+            <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
                 Перевірка реєстрації в базах Norway, EA, BHA
             </div>
             <div className="relative max-w-[500px] w-[95%]">
