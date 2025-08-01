@@ -20,7 +20,6 @@ export default function Home() {
         taxNumber: string
     }[]>([]);
     const ref = useRef<any>(null);
-    const [bulk, setBulk] = useState<boolean>(false);
 
     const fetchData = () => {
         setFetching(true);
@@ -140,17 +139,17 @@ export default function Home() {
             <div className="text-sm">
                 {loadedAt}
             </div>
-            <div >
-                <FaRegListAlt size={35} className="fixed right-2 top-2 z-20 cursor-pointer" onClick={() => {
-                    setBulk((prev) => !prev);
-                    setColumnAData([]);
-                    setValue("");
-                }}/>
-            </div>
             <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
                 Перевірка реєстрації в базах Norway, EA, BHA
             </div>
-            {bulk ? <div>
+          <div className="relative max-w-[500px] w-[95%]">
+                <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
+                       placeholder="Прізвище або ІПН"
+                       className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"/>
+                {!!value.trim() && <span onClick={onClear}
+                                         className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+            </div>
+            <div className="hidden sm:block">
                 <div className="text-sm text-center pt-4 mb-2">
                     Для масової перевірки завантажте файл .XLSX <br/>який містить всі ІПН бенефіціарів в колонці А
                 </div>
@@ -167,13 +166,7 @@ export default function Home() {
                         X
                     </button>}
                 </div>
-            </div> : <div className="relative max-w-[500px] w-[95%]">
-                <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-                       placeholder="Прізвище або ІПН"
-                       className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"/>
-                {!!value.trim() && <span onClick={onClear}
-                                         className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
-            </div>}
+            </div>
 
             {list?.length ? <div className="w-full max-w-[500px]">
                 {
