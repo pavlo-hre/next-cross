@@ -5,7 +5,6 @@ import Image from "next/image";
 import done from "../assets/tick-green-icon.svg";
 import loader from "../assets/tube-spinner.svg";
 import * as XLSX from "xlsx";
-import {FaRegListAlt} from "react-icons/fa";
 import {BsFiletypeXlsx} from "react-icons/bs";
 
 export default function Home() {
@@ -20,11 +19,13 @@ export default function Home() {
         taxNumber: string
     }[]>([]);
     const ref = useRef<any>(null);
+    const loadedAtRef = useRef<number>(0);
 
-    console.log(responseData);
-
-    const fetchData = () => {
-        setFetching(true);
+    const fetchData = (shouldSetLoading = true) => {
+        if((Date.now() - loadedAtRef.current) < 1000 * 60 * 30){
+            return;
+        }
+        setFetching(shouldSetLoading);
         const mainUrl = "https://sheets.googleapis.com/v4/spreadsheets";
         const tableId = "1MD26xAwUc5VKlcjTUA0zEtC2OjKifsQ1uDiu7PB18vw";
         let loadedRecords: any[] = [];
@@ -73,6 +74,7 @@ export default function Home() {
             if (loadedRecords.length < 2400) {
                 alert("Помилка імпорту Google Sheets. Будь ласка перезавантажте сторінку")
             }
+            loadedAtRef.current = Date.now();
         }).catch(() => {
             setFetching(false);
             setResponseData([]);
@@ -80,11 +82,21 @@ export default function Home() {
         });
     }
 
-    useEffect(fetchData, []);
+    useEffect(() => {
+        fetchData();
+        const handleFocus = () => {
+            fetchData(false)
+        }
+
+        window.addEventListener('focus', handleFocus)
+        return () => {
+            window.removeEventListener('focus', handleFocus)
+        }
+    }, []);
 
     const list = useMemo(() => {
         if (value.trim() && value.length > 2) {
-            return responseData.filter((el) => el?.taxNumber?.startsWith(value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
+            return responseData.filter((el) =>  (el?.taxNumber?.startsWith("0") ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith("0") ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
         } else if (columnAData.length > 0) {
             return responseData.filter((el) => columnAData.includes(parseInt(el.taxNumber)));
         } else {
@@ -139,7 +151,7 @@ export default function Home() {
                 Завантажено бенефіціарів: {responseData.length}
             </div>
             <div className="text-sm">
-                {loadedAt}
+               Бази оновлено: {loadedAt}
             </div>
             <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
                 Перевірка реєстрації в базах Norway, EA, BHA
