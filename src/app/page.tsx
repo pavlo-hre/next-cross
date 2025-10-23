@@ -21,6 +21,8 @@ export default function Home() {
     }[]>([]);
     const ref = useRef<any>(null);
 
+    console.log(responseData);
+
     const fetchData = () => {
         setFetching(true);
         const mainUrl = "https://sheets.googleapis.com/v4/spreadsheets";
