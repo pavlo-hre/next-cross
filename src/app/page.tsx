@@ -65,10 +65,21 @@ export default function Home() {
             })) || [];
             loadedRecords.push(...res4);
         });
+
+      const promise5 = axios.get(`${mainUrl}/${tableId}/values/echo!A2:G?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
+        const res5 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
+          name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
+          type: "ECHO набори",
+          date: item?.at(0),
+          taxNumber: item?.at(5)
+        })) || [];
+        loadedRecords.push(...res5);
+      });
+
         axios.get(`${mainUrl}/${tableId}/values/updates!B1?key=AIzaSyCU8tCOqT2YIhxyw_v5_juaK4tiYuZdkXM`).then((res) => {
             setLoadedAt(res?.data?.values?.at(0)?.at(0))
         });
-        Promise.allSettled([promise1, promise2, promise3, promise4]).then(() => {
+        Promise.allSettled([promise1, promise2, promise3, promise4, promise5]).then(() => {
             setFetching(false);
             setResponseData(loadedRecords);
             if (loadedRecords.length < 2400) {
@@ -154,7 +165,7 @@ export default function Home() {
                Бази оновлено: {loadedAt}
             </div>
             <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
-                Перевірка реєстрації в базах Norway, EA, BHA
+                Перевірка реєстрації в базах Norway, ECHO, EA, BHA
             </div>
           <div className="relative max-w-[500px] w-[95%]">
                 <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
