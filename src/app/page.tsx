@@ -210,12 +210,12 @@ export default function Home() {
         Бази оновлено: {loadedAt}
       </div>
       <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
-        Перевірка реєстрації в базах Norway, ECHO, EA, BHA
+        Перевірка реєстрації в базах WASH
       </div>
       <div className="flex flex-col gap-5 max-w-[500px] w-[95%] mb-5 items-center">
         <CheckboxGroup value={selectedProjects}
                        onValueChange={(values) => {
-                         if (values.length === 0) return; // block deselect all
+                         if (values.length === 0) return;
                          setSelectedProjects(values as ProjectsEnum[]);
                        }}
                        orientation="horizontal">
