@@ -11,7 +11,7 @@ import { Checkbox, CheckboxGroup } from '@heroui/checkbox';
 import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import { I18nProvider } from '@react-aria/i18n';
 import { addToast } from '@heroui/toast';
-import { parse } from "date-fns";
+import { parse } from 'date-fns';
 
 
 enum ProjectsEnum {
@@ -146,19 +146,16 @@ export default function Home() {
   }, []);
 
   const list = useMemo(() => {
-    const filteredByProject = responseData.filter((el) => selectedProjects.includes(el.project) );
-    const filteredByDate = filteredByProject.filter((el) => (!el.date || !startDate || dateToCalendarDate(parse(el.date, "dd.MM.yyyy", new Date())).compare(startDate) >= 0))
+    const filteredByProjectAndDate = responseData.filter((el) => selectedProjects.includes(el.project) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
 
     if (value.trim() && value.length > 2) {
-      return filteredByDate.filter((el) => (el?.taxNumber?.startsWith('0') ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith('0') ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
+      return filteredByProjectAndDate.filter((el) => (el?.taxNumber?.startsWith('0') ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith('0') ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
     } else if (columnAData.length > 0) {
-      return filteredByDate.filter((el) => columnAData.includes(parseInt(el.taxNumber)));
+      return filteredByProjectAndDate.filter((el) => columnAData.includes(parseInt(el.taxNumber)));
     } else {
       return [];
     }
   }, [value, responseData, columnAData, startDate, selectedProjects])
-
-  console.log(list)
 
   const onClear = () => {
     setValue('');
@@ -196,6 +193,27 @@ export default function Home() {
     };
 
     reader.readAsBinaryString(file);
+  };
+
+  const exportToXlsx = () => {
+    if (!list || list.length === 0) return;
+
+    const rows = list.map((r) => ({
+      Дата: r.date || '',
+      Бенефіціар: r.name || '',
+      ІПН: r.taxNumber || '',
+      Проект: r.project || '',
+      Активність: r.type || '',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows, {header: ['Дата', 'Бенефіціар', 'ІПН', 'Проект', 'Активність']});
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const filename = `wash_check_${ts}.xlsx`;
+
+    XLSX.writeFile(wb, filename);
   };
 
 
@@ -255,7 +273,7 @@ export default function Home() {
         </div>
       </div>
 
-      {list?.length ? <div className="w-full max-w-[500px]">
+      {list?.length ? <div className="w-full max-w-[500px] pb-5 flex flex-col">
         {
           list?.map((el, index: number) => (
             <div className="mb-2 border-b-2 border-gray-300 p-5" key={`${index}_${el.taxNumber}`}>
@@ -266,6 +284,12 @@ export default function Home() {
             </div>
           ))
         }
+        <button
+          onClick={exportToXlsx}
+          className="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50 mx-auto my-5"
+        >
+          Скачати результат в форматі XLSX
+        </button>
       </div> : ''}
       {((value && value.length > 2 && list?.length === 0) || (list?.length === 0 && columnAData?.length > 0)) &&
         <div className="flex flex-col justify-center items-center text-xl">
