@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { User } from "@/types/models";
 import { UseAuthReturn } from "@/types/auth";
 import { createBrowserClient } from "@supabase/ssr";
+import { addToast } from '@heroui/toast';
 
 export function useAuth(): UseAuthReturn {
   const supabase = createBrowserClient(
@@ -40,6 +41,14 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
+  const checkUserPermissions = async (email: string) => {
+    const { data } = await supabase
+    .from('email_whitelist')
+    .select('*')
+    .eq('email', email)
+    return !!data?.length;
+  }
+
 
   const handleGoogleLogin = async () => {
     try {
@@ -63,7 +72,23 @@ export function useAuth(): UseAuthReturn {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        await updateSessionState(session);
+        const userEmail = session?.user?.email;
+        if(!userEmail){
+          await signOut();
+          return;
+        }
+        const isLoginAllowed = await checkUserPermissions(userEmail);
+        if(isLoginAllowed){
+          await updateSessionState(session);
+        } else {
+          addToast({
+            title: 'Доступ не надано!',
+            description: 'Зверніться до адміністратора',
+            color: 'danger',
+            timeout: 1000 * 120,
+          });
+          await signOut();
+        }
       } catch (error: any) {
         console.error("Error initializing auth:", error);
         setError(error.message);
@@ -81,7 +106,6 @@ export function useAuth(): UseAuthReturn {
 
     return () => subscription.unsubscribe();
   }, []);
-
 
 
   return {
