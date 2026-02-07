@@ -12,6 +12,8 @@ import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import { I18nProvider } from '@react-aria/i18n';
 import { addToast } from '@heroui/toast';
 import { parse } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+import LoginForm from '@/components/LoginForm';
 
 
 enum ProjectsEnum {
@@ -22,6 +24,8 @@ enum ProjectsEnum {
 }
 
 export default function Home() {
+  const {isLoggedIn, isLoading} = useAuth();
+
   const [selectedProjects, setSelectedProjects] = React.useState([ProjectsEnum.ECHO, ProjectsEnum.Norway, ProjectsEnum.EA]);
   const [value, setValue] = useState<string>('');
   const [fetching, setFetching] = useState<boolean>(false);
@@ -134,6 +138,9 @@ export default function Home() {
   }
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
     fetchData();
     const handleFocus = () => {
       fetchData(false)
@@ -143,7 +150,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('focus', handleFocus)
     }
-  }, []);
+  }, [isLoggedIn]);
 
   const list = useMemo(() => {
     const filteredByProjectAndDate = responseData.filter((el) => selectedProjects.includes(el.project) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
@@ -216,11 +223,15 @@ export default function Home() {
     XLSX.writeFile(wb, filename);
   };
 
+  if (!isLoggedIn) {
+    return <LoginForm/>
+  }
 
-  return fetching ? (<div className="w-full h-[100vh] flex justify-center items-center">
+
+  return fetching || isLoading ? (<div className="w-full h-[100vh] flex justify-center items-center">
     <Image src={loader} alt={'loading'} className="my-5"/>
   </div>) : (
-    <div className="min-h-screen flex items-center  flex-col bg-gray-100">
+    <div className="min-h-screen flex items-center  flex-col bg-gray-100 pt-[40px]">
       <div className="text-sm">
         Завантажено бенефіціарів: {responseData.length}
       </div>
