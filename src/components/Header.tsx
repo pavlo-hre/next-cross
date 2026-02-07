@@ -6,7 +6,7 @@ import { RiLogoutBoxRLine } from 'react-icons/ri';
 const Header = () => {
   const {isLoggedIn, user, signOut} = useAuth();
   return isLoggedIn ?
-    <div className="flex justify-end gap-2 items-center bg-gray-300 p-2 absolute right-0 top-0 left-0">
+    <div className="flex justify-end gap-2 items-center bg-gray-300 p-2 fixed right-0 top-0 left-0">
       <CgProfile/>
       <div className="text-sm mr-2">
         {user?.email}
