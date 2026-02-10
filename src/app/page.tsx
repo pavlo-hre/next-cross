@@ -26,7 +26,7 @@ enum ProjectsEnum {
 export default function Home() {
   const {isLoggedIn, isLoading} = useAuth();
 
-  const [selectedProjects, setSelectedProjects] = React.useState([ProjectsEnum.ECHO, ProjectsEnum.Norway, ProjectsEnum.EA]);
+  const [selectedProjects, setSelectedProjects] = React.useState([ProjectsEnum.ECHO, ProjectsEnum.Norway, ProjectsEnum.EA, ProjectsEnum.BHA]);
   const [value, setValue] = useState<string>('');
   const [fetching, setFetching] = useState<boolean>(false);
   const [loadedAt, setLoadedAt] = useState<string>('-');
@@ -61,13 +61,13 @@ export default function Home() {
       })) || [];
       loadedRecords.push(...res1);
     });
-    const norwayCashPromise = axios.get(`${mainUrl}/${tableId}/values/norway-cash!A2:G?key=${apiKey}`).then((res) => {
+    const EACashPromise = axios.get(`${mainUrl}/${tableId}/values/ea-cash!A2:G?key=${apiKey}`).then((res) => {
       const res2 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
         name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'NORWAY ваучер',
+        type: 'EA ваучер',
         date: item?.at(0),
-        taxNumber: item?.at(4),
-        project: ProjectsEnum.Norway,
+        taxNumber: item?.at(5),
+        project: ProjectsEnum.EA,
       })) || [];
       loadedRecords.push(...res2);
     });
@@ -114,10 +114,10 @@ export default function Home() {
         timeout: 1000 * 120,
       });
     }
-    Promise.allSettled([norwayKindPromise, norwayCashPromise, EAPromise, BHAPromise, ECHOPromise]).then(() => {
+    Promise.allSettled([norwayKindPromise, EACashPromise, EAPromise, BHAPromise, ECHOPromise]).then(() => {
       setFetching(false);
       setResponseData(loadedRecords);
-      if (loadedRecords.length < 5000) {
+      if (loadedRecords.length < 500) {
         showToast();
       }
       loadedAtRef.current = Date.now();
