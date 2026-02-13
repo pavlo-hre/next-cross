@@ -26,6 +26,13 @@ enum ProjectsEnum {
 export default function Home() {
   const {isLoggedIn, isLoading} = useAuth();
 
+
+//   useEffect(() => {
+// fetch("/api/sheet").then(res => res.json()).then((r) => {
+//   console.log(r)
+// })
+//   }, [])
+
   const [selectedProjects, setSelectedProjects] = React.useState([ProjectsEnum.ECHO, ProjectsEnum.Norway, ProjectsEnum.EA, ProjectsEnum.BHA]);
   const [value, setValue] = useState<string>('');
   const [fetching, setFetching] = useState<boolean>(false);
