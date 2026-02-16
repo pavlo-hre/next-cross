@@ -5,7 +5,6 @@ type BeneficiaryItem = {
   activity: string;
   date: any;
   taxNumber: any;
-  project: string;
 }
 
 export const sheetFetcher = async <T = any>(...args: Parameters<typeof fetch>) => {
@@ -20,10 +19,9 @@ export const sheetFetcher = async <T = any>(...args: Parameters<typeof fetch>) =
   const beneficiaries = projects.reduce((acc, el) => {
     const beneficiariesByProject = jsonRes?.[el]?.filter((el: any) => !!el.length).map((item: any) => ({
       name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-      activity: `${(el.replace("-kind", " Набори")).replace("-cash", " Ваучер")}`.toUpperCase(),
+      activity: el,
       date: item?.at(0),
       taxNumber: item?.at(5),
-      project: el,
     })) || [];
     acc.push(...beneficiariesByProject);
     return acc;

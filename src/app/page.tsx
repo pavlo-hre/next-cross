@@ -31,7 +31,7 @@ export default function Home() {
   const projects = data?.projects || [];
   const beneficiaries = data?.beneficiaries || [];
 
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [value, setValue] = useState<string>('');
   const [columnAData, setColumnAData] = useState<number[]>([]);
   const [startDate, setStartDate] = React.useState<CalendarDate | null>(today(getLocalTimeZone()).subtract({months: 3}));
@@ -39,7 +39,7 @@ export default function Home() {
 
   useEffect(() => {
     if (projects.length) {
-      setSelectedProjects(projects);
+      setSelectedActivities(projects);
     }
   }, [projects.length]);
 
@@ -67,7 +67,7 @@ export default function Home() {
   }
 
   const list = useMemo(() => {
-    const filteredByProjectAndDate = beneficiaries.filter((el) => selectedProjects.includes(el.project) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
+    const filteredByProjectAndDate = beneficiaries.filter((el) => selectedActivities.includes(el.activity) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
 
     if (value.trim() && value.length > 2) {
       return filteredByProjectAndDate.filter((el) => (el?.taxNumber?.startsWith('0') ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith('0') ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
@@ -76,7 +76,7 @@ export default function Home() {
     } else {
       return [];
     }
-  }, [value, beneficiaries, columnAData, startDate, selectedProjects])
+  }, [value, beneficiaries, columnAData, startDate, selectedActivities])
 
   const onClear = () => {
     setValue('');
@@ -151,15 +151,19 @@ export default function Home() {
       <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
         Перевірка реєстрації в базах WASH
       </div>
-      <div className="flex flex-col gap-5 max-w-[600px] w-[95%] mb-5 items-center">
-        <CheckboxGroup value={selectedProjects}
+      <div className="flex flex-col gap-5 max-w-[600px] w-[95%] items-center mb-5">
+        <CheckboxGroup value={selectedActivities}
                        onValueChange={(values) => {
                          if (values.length === 0) return;
-                         setSelectedProjects(values);
+                         setSelectedActivities(values);
                        }}
                        orientation="horizontal">
           {
-            projects.map((item) => (<Checkbox key={item} value={item}>{item.toUpperCase()}</Checkbox>))
+            projects.map((item) => (<Checkbox key={item} value={item}>
+              <span className={"text-xs"}>
+                 {item.toUpperCase()}
+              </span>
+            </Checkbox>))
           }
         </CheckboxGroup>
         <I18nProvider locale="uk-UA">
@@ -197,7 +201,7 @@ export default function Home() {
         {
           list?.map((el, index: number) => (
             <div className="mb-2 border-b-2 border-gray-300 p-5" key={`${index}_${el.taxNumber}`}>
-              <div>{el.activity}</div>
+              <div>{el.activity.toUpperCase()}</div>
               <div>Дата отримання: {el?.date}</div>
               <div>{el.name}</div>
               <div>{el.taxNumber}</div>
