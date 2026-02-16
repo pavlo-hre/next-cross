@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import axios from 'axios';
 import Image from 'next/image';
 import done from '../assets/tick-green-icon.svg';
 import loader from '../assets/tube-spinner.svg';
@@ -12,124 +11,54 @@ import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
 import { I18nProvider } from '@react-aria/i18n';
 import { addToast } from '@heroui/toast';
 import { parse } from 'date-fns';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import LoginForm from '@/components/LoginForm';
+import useSWR from 'swr';
+import sheetFetcher from '@/app/lib/fetcher';
 
-
-enum ProjectsEnum {
-  Norway = 'NORWAY',
-  ECHO = 'ECHO',
-  EA = 'EA',
-  BHA = 'BHA'
-}
 
 export default function Home() {
-  const {isLoggedIn, isLoading} = useAuth();
+  const {isLoggedIn, isLoading: loginLoading} = useAuth();
+  const {data, isLoading} = useSWR('/api/sheet', sheetFetcher, {
+    revalidateOnFocus: true,
+    onErrorRetry: (err, key, config, revalidate, { retryCount }) => {
+      // Retry max 3 times
+      if (retryCount >= 3) return;
+      // Retry after 2s
+      setTimeout(() => revalidate({ retryCount: retryCount + 1 }), 2000);
+    },
+  });
+  const projects = data?.projects || [];
+  const beneficiaries = data?.beneficiaries || [];
 
-  const [selectedProjects, setSelectedProjects] = React.useState([ProjectsEnum.ECHO, ProjectsEnum.Norway, ProjectsEnum.EA, ProjectsEnum.BHA]);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [value, setValue] = useState<string>('');
-  const [fetching, setFetching] = useState<boolean>(false);
-  const [loadedAt, setLoadedAt] = useState<string>('-');
   const [columnAData, setColumnAData] = useState<number[]>([]);
-  const [responseData, setResponseData] = useState<{
-    name: string;
-    date: string;
-    type: string;
-    taxNumber: string,
-    project: ProjectsEnum
-  }[]>([]);
-  const ref = useRef<any>(null);
-  const loadedAtRef = useRef<number>(0);
   const [startDate, setStartDate] = React.useState<CalendarDate | null>(today(getLocalTimeZone()).subtract({months: 3}));
+  const ref = useRef<any>(null);
 
-  const fetchData = (shouldSetLoading = true) => {
-    if ((Date.now() - loadedAtRef.current) < 1000 * 60 * 30) {
-      return;
+  useEffect(() => {
+    if (projects.length) {
+      setSelectedProjects(projects);
     }
-    setFetching(shouldSetLoading);
-    const mainUrl = 'https://sheets.googleapis.com/v4/spreadsheets';
-    const tableId = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_TABLE_ID;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY;
-    let loadedRecords: any[] = [];
-    const norwayKindPromise = axios.get(`${mainUrl}/${tableId}/values/norway-kind!A2:G?key=${apiKey}`).then((res) => {
-      const res1 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
-        name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'NORWAY набори',
-        date: item?.at(0),
-        taxNumber: item?.at(5),
-        project: ProjectsEnum.Norway,
-      })) || [];
-      loadedRecords.push(...res1);
-    });
-    const EACashPromise = axios.get(`${mainUrl}/${tableId}/values/ea-cash!A2:G?key=${apiKey}`).then((res) => {
-      const res2 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
-        name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'EA ваучер',
-        date: item?.at(0),
-        taxNumber: item?.at(5),
-        project: ProjectsEnum.EA,
-      })) || [];
-      loadedRecords.push(...res2);
-    });
-    const EAPromise = axios.get(`${mainUrl}/${tableId}/values/ea-kind!A2:G?key=${apiKey}`).then((res) => {
-      const res3 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
-        name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'EA набори',
-        date: item?.at(0),
-        taxNumber: item?.at(5),
-        project: ProjectsEnum.EA,
-      })) || [];
-      loadedRecords.push(...res3);
-    });
-    const BHAPromise = axios.get(`${mainUrl}/${tableId}/values/bha-kind!A2:G?key=${apiKey}`).then((res) => {
-      const res4 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
-        name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'BHA набори',
-        date: item?.at(0),
-        taxNumber: item?.at(5),
-        project: ProjectsEnum.BHA,
-      })) || [];
-      loadedRecords.push(...res4);
-    });
+  }, [projects.length]);
 
-    const ECHOPromise = axios.get(`${mainUrl}/${tableId}/values/echo!A2:G?key=${apiKey}`).then((res) => {
-      const res5 = res.data.values.filter((el: any) => !!el.length).map((item: any) => ({
-        name: `${item?.at(1)} ${item?.at(2)} ${item?.at(3)}`,
-        type: 'ECHO набори',
-        date: item?.at(0),
-        taxNumber: item?.at(5),
-        project: ProjectsEnum.ECHO,
-      })) || [];
-      loadedRecords.push(...res5);
-    });
 
-    axios.get(`${mainUrl}/${tableId}/values/updates!B1?key=${apiKey}`).then((res) => {
-      setLoadedAt(res?.data?.values?.at(0)?.at(0))
-    });
-    const showToast = () => {
+  useEffect(() => {
+    if (isLoggedIn && !isLoading && beneficiaries.length < 500) {
       addToast({
         title: 'Помилка імпорту Google Sheets',
         description: 'Будь ласка перезавантажте сторінку',
         color: 'danger',
         timeout: 1000 * 120,
       });
-    }
-    Promise.allSettled([norwayKindPromise, EACashPromise, EAPromise, BHAPromise, ECHOPromise]).then(() => {
-      setFetching(false);
-      setResponseData(loadedRecords);
-      if (loadedRecords.length < 500) {
-        showToast();
-      }
-      loadedAtRef.current = Date.now();
-    }).catch(() => {
-      setFetching(false);
-      setResponseData([]);
-      showToast();
-      alert()
-    });
-  }
 
-  function dateToCalendarDate(date: Date) {
+    }
+
+  }, [beneficiaries.length, isLoading, isLoggedIn]);
+
+
+  const dateToCalendarDate = (date: Date) => {
     return new CalendarDate(
       date.getFullYear(),
       date.getMonth() + 1,
@@ -137,23 +66,8 @@ export default function Home() {
     );
   }
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return;
-    }
-    fetchData();
-    const handleFocus = () => {
-      fetchData(false)
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => {
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [isLoggedIn]);
-
   const list = useMemo(() => {
-    const filteredByProjectAndDate = responseData.filter((el) => selectedProjects.includes(el.project) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
+    const filteredByProjectAndDate = beneficiaries.filter((el) => selectedProjects.includes(el.project) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
 
     if (value.trim() && value.length > 2) {
       return filteredByProjectAndDate.filter((el) => (el?.taxNumber?.startsWith('0') ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith('0') ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
@@ -162,7 +76,7 @@ export default function Home() {
     } else {
       return [];
     }
-  }, [value, responseData, columnAData, startDate, selectedProjects])
+  }, [value, beneficiaries, columnAData, startDate, selectedProjects])
 
   const onClear = () => {
     setValue('');
@@ -209,11 +123,10 @@ export default function Home() {
       Дата: r.date || '',
       Бенефіціар: r.name || '',
       ІПН: r.taxNumber || '',
-      Проект: r.project || '',
-      Активність: r.type || '',
+      Активність: r.activity || '',
     }));
 
-    const ws = XLSX.utils.json_to_sheet(rows, {header: ['Дата', 'Бенефіціар', 'ІПН', 'Проект', 'Активність']});
+    const ws = XLSX.utils.json_to_sheet(rows, {header: ['Дата', 'Бенефіціар', 'ІПН', 'Активність']});
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Results');
 
@@ -228,30 +141,26 @@ export default function Home() {
   }
 
 
-  return fetching || isLoading ? (<div className="w-full h-[100vh] flex justify-center items-center">
+  return isLoading || loginLoading ? (<div className="w-full h-[100vh] flex justify-center items-center">
     <Image src={loader} alt={'loading'} className="my-5"/>
   </div>) : (
     <div className="min-h-screen flex items-center  flex-col bg-gray-100 pt-[40px]">
       <div className="text-sm">
-        Завантажено бенефіціарів: {responseData.length}
-      </div>
-      <div className="text-sm">
-        Бази оновлено: {loadedAt}
+        Завантажено бенефіціарів: {beneficiaries.length}
       </div>
       <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
         Перевірка реєстрації в базах WASH
       </div>
-      <div className="flex flex-col gap-5 max-w-[500px] w-[95%] mb-5 items-center">
+      <div className="flex flex-col gap-5 max-w-[600px] w-[95%] mb-5 items-center">
         <CheckboxGroup value={selectedProjects}
                        onValueChange={(values) => {
                          if (values.length === 0) return;
-                         setSelectedProjects(values as ProjectsEnum[]);
+                         setSelectedProjects(values);
                        }}
                        orientation="horizontal">
-          <Checkbox value={ProjectsEnum.ECHO}>ECHO</Checkbox>
-          <Checkbox value={ProjectsEnum.Norway}>NORWAY</Checkbox>
-          <Checkbox value={ProjectsEnum.EA}>EA</Checkbox>
-          <Checkbox value={ProjectsEnum.BHA}>BHA</Checkbox>
+          {
+            projects.map((item) => (<Checkbox key={item} value={item}>{item.toUpperCase()}</Checkbox>))
+          }
         </CheckboxGroup>
         <I18nProvider locale="uk-UA">
           <DatePicker className="max-w-[180px]" label="Остання видача" value={startDate}
@@ -288,7 +197,7 @@ export default function Home() {
         {
           list?.map((el, index: number) => (
             <div className="mb-2 border-b-2 border-gray-300 p-5" key={`${index}_${el.taxNumber}`}>
-              <div>{el.type}</div>
+              <div>{el.activity}</div>
               <div>Дата отримання: {el?.date}</div>
               <div>{el.name}</div>
               <div>{el.taxNumber}</div>

@@ -1,7 +1,7 @@
-import { useAuth } from "@/hooks/useAuth";
 import Image from 'next/image';
 import google from '@/assets/google.svg';
 import React from 'react';
+import { useAuth } from '@/providers/AuthProvider';
 
 const LoginForm = () => {
   const { handleGoogleLogin } = useAuth();

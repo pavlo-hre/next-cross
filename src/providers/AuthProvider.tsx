@@ -1,15 +1,13 @@
-import { useState, useEffect } from "react";
-import { User } from "@/types/models";
-import { UseAuthReturn } from "@/types/auth";
-import { createBrowserClient } from "@supabase/ssr";
+'use client';
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User } from '@/types/models';
 import { addToast } from '@heroui/toast';
+import supabaseClient from '@/app/lib/supabaseClient';
 
-export function useAuth(): UseAuthReturn {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+const AuthContext = createContext<any>(null);
 
+export function AuthProvider({children}: { children: React.ReactNode }) {
   // State
   const [session, setSession] = useState<any>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -31,18 +29,18 @@ export function useAuth(): UseAuthReturn {
   // Auth methods
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       setSession(null);
       setIsLoggedIn(false);
-      window.localStorage.removeItem("supabase.auth.token");
+      window.localStorage.removeItem('supabase.auth.token');
     } catch (error: any) {
       setError(error.message);
-      console.error("Error signing out:", error);
+      console.error('Error signing out:', error);
     }
   };
 
   const checkUserPermissions = async (email: string) => {
-    const { data } = await supabase
+    const {data} = await supabaseClient
     .from('email_whitelist')
     .select('*')
     .eq('email', email)
@@ -52,15 +50,15 @@ export function useAuth(): UseAuthReturn {
 
   const handleGoogleLogin = async () => {
     try {
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
+      await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}`,
         },
       });
     } catch (error: any) {
       setError(error.message);
-      console.error("Error with Google login:", error);
+      console.error('Error with Google login:', error);
     }
   };
 
@@ -70,15 +68,15 @@ export function useAuth(): UseAuthReturn {
     const initAuth = async () => {
       try {
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
+          data: {session},
+        } = await supabaseClient.auth.getSession();
         const userEmail = session?.user?.email;
-        if(!userEmail){
+        if (!userEmail) {
           await signOut();
           return;
         }
         const isLoginAllowed = await checkUserPermissions(userEmail);
-        if(isLoginAllowed){
+        if (isLoginAllowed) {
           await updateSessionState(session);
         } else {
           addToast({
@@ -90,7 +88,7 @@ export function useAuth(): UseAuthReturn {
           await signOut();
         }
       } catch (error: any) {
-        console.error("Error initializing auth:", error);
+        console.error('Error initializing auth:', error);
         setError(error.message);
         await signOut();
       }
@@ -99,8 +97,8 @@ export function useAuth(): UseAuthReturn {
     initAuth();
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+      data: {subscription},
+    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
       updateSessionState(session);
     });
 
@@ -108,17 +106,23 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
 
-  return {
-    // State
-    session,
-    isLoggedIn,
-    isLoading,
-    error,
-    user,
+  return (
+    <AuthContext.Provider value={{
+      // State
+      session,
+      isLoggedIn,
+      isLoading,
+      error,
+      user,
 
-    // Operations
-    signOut,
-    handleGoogleLogin,
-    clearError,
-  } as any;
+      // Operations
+      signOut,
+      handleGoogleLogin,
+      clearError,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
+
+export const useAuth = () => useContext(AuthContext);
