@@ -1,7 +1,8 @@
 'use client'
 import { CgProfile } from 'react-icons/cg';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { RiLogoutBoxRLine } from 'react-icons/ri';
+
 
 const Header = () => {
   const {isLoggedIn, user, signOut} = useAuth();

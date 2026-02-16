@@ -1,15 +1,13 @@
 import { google } from "googleapis";
-
+import { getTabNames } from '@/app/lib/getTabNames';
 
 
 
 export async function GET() {
   // 1️⃣ Fetch table info from database
- 
+  const tabNames = await getTabNames();
 
-  const tables = ["ea-cash", "echo"];
-
-  const ranges = tables.map((t) => `${t}!A2:F`);
+  const ranges = tabNames.map((t) => `${t}!A2:F`);
 
   // 2️⃣ Authenticate with Google
   const auth = new google.auth.JWT({
@@ -29,7 +27,7 @@ export async function GET() {
   // 4️⃣ Map response back to table names
   const result = {};
   response.data.valueRanges?.forEach((vr, i) => {
-    result[tables[i]] = vr.values ?? [];
+    (result as any)[tabNames[i]] = vr.values ?? [];
   });
 
   return Response.json(result);
