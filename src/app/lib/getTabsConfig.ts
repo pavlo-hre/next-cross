@@ -6,7 +6,7 @@ export const getTabsConfig = async (): Promise<{name: string; duration: number}[
   .select("*");
 
   if (error) {
-    console.error("Error fetching tab names:", error);
+    console.error("Error fetching tab config:", error);
   }
 
   return data || [];

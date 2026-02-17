@@ -4,6 +4,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types/models';
 import { addToast } from '@heroui/toast';
 import supabaseClient from '@/app/lib/supabaseClient';
+import { getProjectUser } from '@/app/lib/getProjectUser';
+
+export type Project = "EA" | "ECHO" | "NORWAY" | "BHA";
 
 const AuthContext = createContext<any>(null);
 
@@ -14,6 +17,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [userProject, setUserProject] = useState<Project | null>(null);
 
   // Helper functions
   const clearError = () => setError(null);
@@ -40,11 +44,12 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   };
 
   const checkUserPermissions = async (email: string) => {
-    const {data} = await supabaseClient
-    .from('project_users')
-    .select('*')
-    .eq('email', email)
-    return !!data?.length;
+    const data = await getProjectUser(email);
+    if(data?.length){
+      setUserProject(data?.at(0)!.project);
+      return true;
+    }
+    return false;
   }
 
 
@@ -114,6 +119,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
       isLoading,
       error,
       user,
+      userProject,
 
       // Operations
       signOut,
