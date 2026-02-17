@@ -15,17 +15,18 @@ import { useAuth } from '@/providers/AuthProvider';
 import LoginForm from '@/components/LoginForm';
 import useSWR from 'swr';
 import sheetFetcher from '@/app/lib/fetcher';
+import { InfoTooltip } from '@/components/Tooltip';
 
 
 export default function Home() {
   const {isLoggedIn, isLoading: loginLoading} = useAuth();
   const {data, isLoading} = useSWR('/api/sheet', sheetFetcher, {
     revalidateOnFocus: true,
-    onErrorRetry: (err, key, config, revalidate, { retryCount }) => {
+    onErrorRetry: (err, key, config, revalidate, {retryCount}) => {
       // Retry max 3 times
       if (retryCount >= 3) return;
       // Retry after 2s
-      setTimeout(() => revalidate({ retryCount: retryCount + 1 }), 2000);
+      setTimeout(() => revalidate({retryCount: retryCount + 1}), 2000);
     },
   });
   const projects = data?.projects || [];
@@ -148,7 +149,7 @@ export default function Home() {
       <div className="text-sm">
         Завантажено бенефіціарів: {beneficiaries.length}
       </div>
-      <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-8">
+      <div className="text-center mb-4 px-10 text-xl max-w-[500px] pt-4">
         Перевірка реєстрації в базах WASH
       </div>
       <div className="flex flex-col gap-5 max-w-[600px] w-[95%] items-center mb-5">
@@ -160,27 +161,38 @@ export default function Home() {
                        orientation="horizontal">
           {
             projects.map((item) => (<Checkbox key={item} value={item}>
-              <span className={"text-xs"}>
+              <span className={'text-xs'}>
                  {item.toUpperCase()}
               </span>
             </Checkbox>))
           }
         </CheckboxGroup>
         <I18nProvider locale="uk-UA">
-          <DatePicker className="max-w-[180px]" label="Остання видача" value={startDate}
+          <DatePicker className="max-w-[180px]" label={<div className="flex items-center gap-2">
+            Дата видачі
+            <InfoTooltip content="За замовчуванням перевірка охоплює останні 3 місяці, змінюйте дату якщо потрібен інший період "/>
+          </div>} value={startDate}
                       onChange={(date) => setStartDate(date)}/>
         </I18nProvider>
       </div>
-      <div className="relative max-w-[500px] w-[95%]">
-        <input value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
-               placeholder="Прізвище або ІПН"
-               className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"/>
-        {!!value.trim() && <span onClick={onClear}
-                                 className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+      <div className="max-w-[500px] w-[95%]">
+        <label htmlFor="beneficiary" className="flex items-center gap-2 mb-2">Введіть ІПН, прізвище або серію та номер
+          паспорта <InfoTooltip content="Паспортні дані мають бути в форматі АА123456"/></label>
+        <div className="relative">
+          <input id="beneficiary" value={value} onChange={(e) => setValue(e.target.value.trim())} type="text"
+                 placeholder="Прізвище або ІПН"
+                 className="w-full text-2xl p-1 border-2 rounded-m border-gray-300 mb-1 pr-4"/>
+          {!!value.trim() && <span onClick={onClear}
+                                   className="h-fit absolute right-1 top-[3px] bottom-0 py-1.5 px-3 bg-red-300">X</span>}
+        </div>
       </div>
       <div className="hidden sm:block">
-        <div className="text-sm text-center pt-4 mb-2">
-          Для масової перевірки завантажте файл .XLSX <br/>який містить всі ІПН бенефіціарів в колонці А
+        <div className="text-sm text-center pt-4 mb-2 flex items-center gap-2">
+          <div>
+            Для масової перевірки завантажте файл .XLSX <br/>
+            який містить всі ІПН бенефіціарів в колонці А
+          </div>
+          <InfoTooltip content="Якщо бенефіціар не має ІПН, перевірте його окремо за прізвищем або паспортом"/>
         </div>
         <div className="flex gap-5 items-center">
           <input id="file-upload" ref={ref} type="file" accept=".xlsx, .xls" onChange={handleFileUpload}

@@ -34,7 +34,7 @@ const LoginForm = () => {
           <span>Продовжити з Google</span>
         </button>
         <p className="text-center text-sm text-gray-600">
-          Для входу використовуйте ваш робочий аккаунт
+          Для входу використовуйте ваш робочий email
         </p>
       </div>
     </div>
