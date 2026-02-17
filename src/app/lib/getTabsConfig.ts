@@ -1,14 +1,13 @@
 import supabaseClient from '@/app/lib/supabaseClient';
 
-export const getTabNames = async () => {
-  console.log("getTabNames");
+export const getTabsConfig = async (): Promise<{name: string; duration: number}[]> => {
   const { data, error } = await supabaseClient
-  .from("sheet_tabs")
-  .select("name");
+  .from("tabs_config")
+  .select("*");
 
   if (error) {
     console.error("Error fetching tab names:", error);
   }
 
-  return data?.map((el) => el.name) || [];
+  return data || [];
 };

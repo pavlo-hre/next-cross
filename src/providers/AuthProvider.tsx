@@ -41,7 +41,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
 
   const checkUserPermissions = async (email: string) => {
     const {data} = await supabaseClient
-    .from('email_whitelist')
+    .from('project_users')
     .select('*')
     .eq('email', email)
     return !!data?.length;
