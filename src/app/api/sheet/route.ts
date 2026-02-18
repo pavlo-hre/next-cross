@@ -25,10 +25,10 @@ export async function GET() {
   });
 
   // 4️⃣ Map response back to table names
-  const result = {};
+  const sheetData = {};
   response.data.valueRanges?.forEach((vr, i) => {
-    (result as any)[tabsConfig[i]?.name] = vr.values ?? [];
+    (sheetData as any)[tabsConfig[i]?.name] = vr.values ?? [];
   });
 
-  return Response.json(result);
+  return Response.json({sheetData, tabsConfig});
 }

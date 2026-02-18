@@ -5,8 +5,8 @@ import { User } from '@/types/models';
 import { addToast } from '@heroui/toast';
 import supabaseClient from '@/app/lib/supabaseClient';
 import { getProjectUser } from '@/app/lib/getProjectUser';
+import { UserProjectEnum } from '@/providers/ProjectProvider';
 
-export type Project = "EA" | "ECHO" | "NORWAY" | "BHA";
 
 const AuthContext = createContext<any>(null);
 
@@ -17,7 +17,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userProject, setUserProject] = useState<Project | null>(null);
+  const [userProject, setUserProject] = useState<UserProjectEnum | null>(null);
 
   // Helper functions
   const clearError = () => setError(null);
@@ -46,7 +46,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   const checkUserPermissions = async (email: string) => {
     const data = await getProjectUser(email);
     if(data?.length){
-      setUserProject(data?.at(0)!.project);
+      setUserProject(data?.at(0)!.project as UserProjectEnum);
       return true;
     }
     return false;

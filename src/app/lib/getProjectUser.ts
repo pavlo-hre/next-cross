@@ -1,5 +1,5 @@
 import supabaseClient from '@/app/lib/supabaseClient';
-import { Project } from '@/providers/AuthProvider';
+import { UserProjectEnum } from '@/providers/ProjectProvider';
 
 export const getProjectUser = async (email: string) => {
   const { data, error } = await supabaseClient
@@ -11,5 +11,5 @@ export const getProjectUser = async (email: string) => {
     console.error("Error fetching project users:", error);
   }
 
-  return data as unknown as Promise<{email: string; project: Project}[]>;
+  return data as unknown as Promise<{email: string; project: UserProjectEnum}[]>;
 }

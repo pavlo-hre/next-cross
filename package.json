@@ -12,13 +12,11 @@
   "dependencies": {
     "@heroui/checkbox": "^2.3.29",
     "@heroui/date-input": "^2.3.29",
-    "@heroui/date-picker": "^2.3.30",
     "@heroui/react": "^2.8.7",
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
     "@heroui/toast": "^2.0.19",
     "@internationalized/date": "^3.10.1",
-    "@react-aria/i18n": "^3.12.14",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "date-fns": "^4.1.0",

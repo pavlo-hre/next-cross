@@ -1,6 +1,7 @@
 import supabaseClient from '@/app/lib/supabaseClient';
+import { TabsConfig } from '@/app/lib/fetcher';
 
-export const getTabsConfig = async (): Promise<{name: string; duration: number}[]> => {
+export const getTabsConfig = async (): Promise<TabsConfig[]> => {
   const { data, error } = await supabaseClient
   .from("tabs_config")
   .select("*");

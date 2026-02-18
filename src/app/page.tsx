@@ -5,10 +5,8 @@ import done from '../assets/tick-green-icon.svg';
 import loader from '../assets/tube-spinner.svg';
 import * as XLSX from 'xlsx';
 import { BsFiletypeXlsx } from 'react-icons/bs';
-import { DatePicker } from '@heroui/date-picker';
 import { Checkbox, CheckboxGroup } from '@heroui/checkbox';
 import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date';
-import { I18nProvider } from '@react-aria/i18n';
 import { addToast } from '@heroui/toast';
 import { parse } from 'date-fns';
 import { useAuth } from '@/providers/AuthProvider';
@@ -16,10 +14,12 @@ import LoginForm from '@/components/LoginForm';
 import useSWR from 'swr';
 import sheetFetcher from '@/app/lib/fetcher';
 import { InfoTooltip } from '@/components/Tooltip';
+import { useProject } from '@/providers/ProjectProvider';
 
 
 export default function Home() {
   const {isLoggedIn, isLoading: loginLoading} = useAuth();
+  const {selectedProject} = useProject();
   const {data, isLoading} = useSWR('/api/sheet', sheetFetcher, {
     revalidateOnFocus: true,
     onErrorRetry: (err, key, config, revalidate, {retryCount}) => {
@@ -35,12 +35,12 @@ export default function Home() {
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [value, setValue] = useState<string>('');
   const [columnAData, setColumnAData] = useState<number[]>([]);
-  const [startDate, setStartDate] = React.useState<CalendarDate | null>(today(getLocalTimeZone()).subtract({months: 3}));
+  const [startDate] = React.useState<CalendarDate>(today(getLocalTimeZone()).subtract({months: 3}));
   const ref = useRef<any>(null);
 
   useEffect(() => {
     if (projects.length) {
-      setSelectedActivities(projects);
+      setSelectedActivities(projects.map((p) => p.name));
     }
   }, [projects.length]);
 
@@ -58,6 +58,28 @@ export default function Home() {
 
   }, [beneficiaries.length, isLoading, isLoggedIn]);
 
+  function addDuplicateIndex<T extends { activity: string; taxNumber: string }>(
+    data: T[]
+  ): (T & { distribution: number })[] {
+    const counts = new Map<string, number>();
+    const result = new Array(data.length) as (T & { distribution: number })[];
+
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
+      const key = `${item.activity}|${item.taxNumber}`;
+
+      const count = (counts.get(key) ?? 0) + 1;
+      counts.set(key, count);
+
+      result[i] = {
+        ...item,
+        distribution: count,
+      };
+    }
+
+    return result;
+  }
+
 
   const dateToCalendarDate = (date: Date) => {
     return new CalendarDate(
@@ -68,7 +90,7 @@ export default function Home() {
   }
 
   const list = useMemo(() => {
-    const filteredByProjectAndDate = beneficiaries.filter((el) => selectedActivities.includes(el.activity) && (!el.date || !startDate || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0));
+    const filteredByProjectAndDate = addDuplicateIndex(beneficiaries.filter((el) => selectedActivities.includes(el.activity) && ((!el.date || el.activity.split(" ")[0].toUpperCase() === selectedProject || dateToCalendarDate(parse(el.date, 'dd.MM.yyyy', new Date())).compare(startDate) >= 0))));
 
     if (value.trim() && value.length > 2) {
       return filteredByProjectAndDate.filter((el) => (el?.taxNumber?.startsWith('0') ? parseInt(el.taxNumber)?.toString() : el.taxNumber)?.startsWith(value?.startsWith('0') ? parseInt(value)?.toString() : value) || el?.name?.toLowerCase()?.startsWith(value.toLowerCase()))
@@ -77,7 +99,8 @@ export default function Home() {
     } else {
       return [];
     }
-  }, [value, beneficiaries, columnAData, startDate, selectedActivities])
+  }, [value, beneficiaries, columnAData, startDate, selectedActivities, selectedProject]);
+
 
   const onClear = () => {
     setValue('');
@@ -145,7 +168,7 @@ export default function Home() {
   return isLoading || loginLoading ? (<div className="w-full h-[100vh] flex justify-center items-center">
     <Image src={loader} alt={'loading'} className="my-5"/>
   </div>) : (
-    <div className="min-h-screen flex items-center  flex-col bg-gray-100 pt-[40px]">
+    <div className="min-h-screen flex items-center  flex-col bg-gray-100 pt-[60px]">
       <div className="text-sm">
         Завантажено бенефіціарів: {beneficiaries.length}
       </div>
@@ -160,20 +183,13 @@ export default function Home() {
                        }}
                        orientation="horizontal">
           {
-            projects.map((item) => (<Checkbox key={item} value={item}>
+            projects.map((item) => (<Checkbox key={item.id} value={item.name}>
               <span className={'text-xs'}>
-                 {item.toUpperCase()}
+                 {item.name.toUpperCase()}
               </span>
             </Checkbox>))
           }
         </CheckboxGroup>
-        <I18nProvider locale="uk-UA">
-          <DatePicker className="max-w-[180px]" label={<div className="flex items-center gap-2">
-            Дата видачі
-            <InfoTooltip content="За замовчуванням перевірка охоплює останні 3 місяці, змінюйте дату якщо потрібен інший період "/>
-          </div>} value={startDate}
-                      onChange={(date) => setStartDate(date)}/>
-        </I18nProvider>
       </div>
       <div className="max-w-[500px] w-[95%]">
         <label htmlFor="beneficiary" className="flex items-center gap-2 mb-2">Введіть ІПН, прізвище або серію та номер
@@ -213,10 +229,16 @@ export default function Home() {
         {
           list?.map((el, index: number) => (
             <div className="mb-2 border-b-2 border-gray-300 p-5" key={`${index}_${el.taxNumber}`}>
-              <div>{el.activity.toUpperCase()}</div>
-              <div>Дата отримання: {el?.date}</div>
+              <div className="font-bold">{el.activity.toUpperCase()}</div>
+              <div className="text-medium font-bold text-gray-700 flex">
+                <div>Дата отримання: {el?.date} {`(${el?.duration} міс.`}</div>
+                <InfoTooltip content="Вказано базовий період на який розрахована допомога. Враховуйте планову кількість видач для кожної активності"/> )
+                {el.plannedDistributions > 1 && <div>&nbsp;видача {el.distribution}/{el.plannedDistributions}</div>}
+              </div>
               <div>{el.name}</div>
               <div>{el.taxNumber}</div>
+              <div>
+              </div>
             </div>
           ))
         }
