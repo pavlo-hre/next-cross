@@ -14,14 +14,14 @@ export enum UserProjectEnum {
 const ProjectContext = createContext<any>(null);
 
 export function ProjectProvider({children}: { children: React.ReactNode }) {
-  const {userProject} = useAuth();
+  const {user} = useAuth();
   const [selectedProject, setSelectedProject] = useState<UserProjectEnum | null>( null);
 
   useEffect(() => {
-    if (userProject && !selectedProject) {
-      setSelectedProject(userProject);
+    if (user?.project && !selectedProject) {
+      setSelectedProject(user?.project);
     }
-  }, [userProject]);
+  }, [user?.project]);
 
   return (
     <ProjectContext.Provider value={{

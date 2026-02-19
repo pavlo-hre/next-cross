@@ -16,10 +16,12 @@ const Header = () => {
     setSelectedProject(key);
   };
 
+  const projectChangeEnabled = user?.can_change_project;
+
 
   return isLoggedIn ?
     <div className="flex justify-end gap-3 items-center bg-gray-300 p-2 fixed right-0 top-0 left-0 z-100 min-h-[56px]">
-      <div className="flex gap-1">
+      {projectChangeEnabled ?  <div className="flex gap-1">
         {selectedProject && projects.length ? (
           <Autocomplete className="w-[120px]"
                         aria-label="Project"
@@ -30,13 +32,14 @@ const Header = () => {
                         inputValue={selectedProject}
                         selectedKey={selectedProject}
                         onSelectionChange={onSelectionChange}
+                        disabled={!projectChangeEnabled}
           >
             {projects.map((project) => (
               <AutocompleteItem key={project.value}>{project.label}</AutocompleteItem>
             ))}
           </Autocomplete>) : null}
-          <InfoTooltip placement="bottom-end" content="Для обраного проєкту результати пошуку будуть відображатися за весь період, для інших лише за 3 місяці!"/>
-      </div>
+          {projectChangeEnabled && <InfoTooltip placement="bottom-end" content="Для обраного проєкту результати пошуку будуть відображатися за весь період, для інших лише за 3 місяці!"/>}
+      </div>: <div className="flex gap-1">{selectedProject}</div>}
       <RiTeamLine/>
       <div className="text-sm mr-2">
         {user?.email?.replace(/@.*$/, '')}

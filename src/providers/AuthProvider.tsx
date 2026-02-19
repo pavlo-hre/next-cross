@@ -17,7 +17,6 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userProject, setUserProject] = useState<UserProjectEnum | null>(null);
 
   // Helper functions
   const clearError = () => setError(null);
@@ -25,7 +24,6 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
 
   const updateSessionState = async (newSession: any) => {
     setSession(newSession);
-    setUser(newSession?.user || null);
     setIsLoggedIn(!!newSession);
     setIsLoading(false);
   };
@@ -46,7 +44,7 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
   const checkUserPermissions = async (email: string) => {
     const data = await getProjectUser(email);
     if(data?.length){
-      setUserProject(data?.at(0)!.project as UserProjectEnum);
+      setUser(data?.at(0) as User);
       return true;
     }
     return false;
@@ -119,7 +117,6 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
       isLoading,
       error,
       user,
-      userProject,
 
       // Operations
       signOut,
